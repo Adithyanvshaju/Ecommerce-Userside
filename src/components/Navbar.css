@@ -1,0 +1,82 @@
+
+.custom-navbar {
+
+  padding: 0.75rem 0;
+  position: sticky;
+  top: 0;
+  background: #01090d;
+background: linear-gradient(190deg, rgba(1, 9, 13, 1) 1%, rgba(43, 8, 8, 1) 29%, rgba(140, 103, 76, 1) 94%, rgba(15, 14, 3, 1) 100%);
+
+  }
+
+
+
+
+
+
+.brand-text {
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: 3px;
+}
+
+
+.navbar-search {
+  position: absolute;
+  left: 30%;
+  transform: translateX(-50%);
+  display: flex;
+  width: 380px;
+  max-width: 100%;
+}
+
+
+.navbar-search input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid rgb(181, 178, 178);
+  border-right: none;
+  background: transparent;
+  color:  rgba(255, 255, 255, 0.6);
+  border-radius: 6px 0 0 6px;
+}
+
+.navbar-search input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.navbar-search input:focus {
+  outline: none;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+
+.navbar-search button {
+  padding: 8px 14px;
+  border: 2px solid  rgba(255, 255, 255, 0.6);
+  background: transparent;
+  color:  rgba(255, 255, 255, 0.6);
+  border-radius: 0 6px 6px 0;
+  cursor: pointer;
+}
+
+.navbar-search button:hover {
+  background-color: white;
+  color: #010c16ff;
+}
+
+
+@media (max-width: 992px) {
+  .navbar-search {
+    position: static;
+    transform: none;
+    margin: 1rem auto;
+    width: 100%;
+  }
+}
+.search-item:hover {
+  background-color: #f2f2f2;
+}
+
