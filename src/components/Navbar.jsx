@@ -20,13 +20,11 @@ function Navbar() {
   const cartCount = cart.length
   const wishlistCount = wishlist.length
 
-
   useEffect(() => {
     api.get('/products').then(res => {
       setProducts(res.data)
     })
   }, [])
-
 
   useEffect(() => {
     if (!query.trim()) {
@@ -50,37 +48,53 @@ function Navbar() {
   }
 
   return (
-    <nav className="navbar navbar-expand-lg custom-navbar" style={{ position: "sticky", zIndex: 1 }}>
+    <nav className="navbar navbar-expand-lg custom-navbar">
       <div className="container position-relative">
 
-       <Link className="navbar-brand d-flex align-items-center gap-2" to="/"> 
-       <svg width="40" height="40" viewBox="0 0 100 100"> 
-        <path d="M20 80 V20 L50 60 V20 H60 V80 H50 L20 40 V80 Z" fill="white" /> 
-        <path d="M65 20 H85 C92 20 92 35 85 40 C92 45 92 60 85 60 H65 V20 Z" fill="white" /> 
-        </svg> <span className="brand-text">NEW BALANCE</span> 
+        {/* LOGO */}
+        <Link className="navbar-brand d-flex align-items-center gap-2" to="/">
+          <svg width="40" height="40" viewBox="0 0 100 100">
+            <path d="M20 80 V20 L50 60 V20 H60 V80 H50 L20 40 V80 Z" fill="white" />
+            <path d="M65 20 H85 C92 20 92 35 85 40 C92 45 92 60 85 60 H65 V20 Z" fill="white" />
+          </svg>
+          <span className="brand-text">NEW BALANCE</span>
         </Link>
-        <div className="position-relative navbar-search">
 
-          <form onSubmit={handleSearch}>
+        {/* HAMBURGER */}
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarContent"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        {/* DESKTOP SEARCH */}
+        <div className="position-relative navbar-search d-none d-lg-flex">
+          <form onSubmit={handleSearch} className="d-flex w-100">
             <input
               type="search"
               placeholder="Search shoes..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              autoComplete="off"/>
+              autoComplete="off"
+            />
             <button type="submit">Search</button>
           </form>
 
-           {filtered.length > 0 && (
-            <div className="position-absolute bg-white shadow w-100"
-              style={{ top: "100%", zIndex: 999 }}>
+          {filtered.length > 0 && (
+            <div className="position-absolute bg-white shadow w-100" style={{ top: '100%', zIndex: 999 }}>
               {filtered.map(product => (
-                <div key={product.id}
+                <div
+                  key={product.id}
                   className="px-3 py-2 border-bottom search-item"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => { navigate(`/product/${product.id}`)
+                  onClick={() => {
+                    navigate(`/product/${product.id}`)
                     setQuery('')
-                    setFiltered([])}}>
+                    setFiltered([])
+                  }}
+                >
                   {product.name}
                 </div>
               ))}
@@ -88,8 +102,43 @@ function Navbar() {
           )}
         </div>
 
-        <div className="collapse navbar-collapse justify-content-end">
+        {/* NAV LINKS */}
+        <div className="collapse navbar-collapse justify-content-end" id="navbarContent">
           <ul className="navbar-nav gap-lg-3 align-items-lg-center">
+
+            {/* MOBILE SEARCH */}
+            <li className="nav-item d-lg-none w-100 mb-3">
+              <div className="navbar-search">
+                <form onSubmit={handleSearch} className="d-flex w-100">
+                  <input
+                    type="search"
+                    placeholder="Search shoes..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    autoComplete="off"
+                  />
+                  <button type="submit">Search</button>
+                </form>
+
+                {filtered.length > 0 && (
+                  <div className="bg-white shadow mt-1">
+                    {filtered.map(product => (
+                      <div
+                        key={product.id}
+                        className="px-3 py-2 border-bottom search-item"
+                        onClick={() => {
+                          navigate(`/product/${product.id}`)
+                          setQuery('')
+                          setFiltered([])
+                        }}
+                      >
+                        {product.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </li>
 
             <li className="nav-item">
               <Link className="nav-link text-white" to="/products">SNKRS</Link>
@@ -118,10 +167,10 @@ function Navbar() {
                     )}
                   </Link>
                 </li>
-                    <li className="nav-item">
-              <Link className="nav-link text-white" to="/orders">ORDERS</Link>
-            </li>
 
+                <li className="nav-item">
+                  <Link className="nav-link text-white" to="/orders">ORDERS</Link>
+                </li>
 
                 <li className="nav-item">
                   <button className="btn btn-outline-light" onClick={logout}>
