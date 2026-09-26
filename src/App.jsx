@@ -17,7 +17,7 @@ import Orders from './pages/Orders'
 function App() {
   return (
     <div>
-      <Navbar/>
+      {/* <Navbar/> */}
       <Routes>
         <Route path='/' element={<Home/>}/>
         <Route path='/Register' element={<Register/>}/>

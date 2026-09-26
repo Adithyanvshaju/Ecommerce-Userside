@@ -35,6 +35,12 @@
       "username": "Adithyan",
       "email": "adithyan@gmail.com",
       "password": "adhi123"
+    },
+    {
+      "username": "adithyan",
+      "email": "adhi@gmail.com",
+      "password": "adhi123",
+      "id": "LBeOJZSkG5Q"
     }
   ],
   "admins": [
@@ -263,5 +269,6 @@
       "image": "https://www.superkicks.in/cdn/shop/files/1_80db88ef-1f05-4159-9862-ad14fef243b6.jpg?v=1729676548&width=1946",
       "description": "Fast, responsive shoe for speed workouts."
     }
-  ]
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
 }
