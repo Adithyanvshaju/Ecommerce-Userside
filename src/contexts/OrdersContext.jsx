@@ -1,48 +1,89 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth } from './AuthContext'
+import api from '../services/api'
 
 const OrdersContext = createContext()
 
 export const OrdersProvider = ({ children }) => {
+
   const { user } = useAuth()
   const [orders, setOrders] = useState([])
 
- 
-  useEffect(() => {
-    if (user) {
-      const saved = localStorage.getItem(`orders_${user.email}`)
-      setOrders(saved ? JSON.parse(saved) : [])
-    } else {
+
+  // =====================================
+  // GET ORDERS FROM DJANGO
+  // =====================================
+
+  const fetchOrders = async () => {
+
+    try {
+
+      const response = await api.get('/orders/')
+
+      setOrders(response.data)
+
+    } catch (error) {
+
+      console.error(
+        'Orders error:',
+        error.response?.data || error.message
+      )
+
       setOrders([])
+
     }
+
+  }
+
+
+  // =====================================
+  // LOGIN / LOGOUT
+  // =====================================
+
+  useEffect(() => {
+
+    if (user) {
+
+      fetchOrders()
+
+    } else {
+
+      setOrders([])
+
+    }
+
   }, [user])
 
- 
-  useEffect(() => {
+
+  // =====================================
+  // REFRESH ORDERS
+  // =====================================
+
+  const refreshOrders = () => {
+
     if (user) {
-      localStorage.setItem(
-        `orders_${user.email}`,
-        JSON.stringify(orders)
-      )
+      fetchOrders()
     }
-  }, [orders, user])
 
-  const addOrder = (order) => {
-    setOrders(prev => [...prev, order])
   }
 
-  const clearOrders = () => {
-    setOrders([])
-    if (user) localStorage.removeItem(`orders_${user.email}`)
-  }
 
   return (
+
     <OrdersContext.Provider
-      value={{ orders, addOrder, clearOrders }}
+      value={{
+        orders,
+        refreshOrders
+      }}
     >
+
       {children}
+
     </OrdersContext.Provider>
+
   )
+
 }
+
 
 export const useOrders = () => useContext(OrdersContext)

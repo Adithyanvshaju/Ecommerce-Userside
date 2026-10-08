@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../contexts/CartContent'
 import './ProductDetails.css'
 import { useWishlist } from '../contexts/WishlistContext'
+import Navbar from '../components/Navbar'
 
 
 function ProductDetails() {
@@ -19,7 +20,7 @@ function ProductDetails() {
   const [quantity, setQuantity] = useState(1)
 
   useEffect(() => {
-    api.get(`/products/${id}`)
+    api.get(`/products/${id}/`)
       .then(res => setProduct(res.data))
       .catch(err => console.error(err))
   }, [id])
@@ -45,6 +46,9 @@ function ProductDetails() {
 
 
   return (
+    <div>
+      
+      <Navbar/>
     <div className="container mt-5 product-details">
       <div className="row">
         <div className="col-md-6">
@@ -54,7 +58,7 @@ function ProductDetails() {
         <div className="col-md-6">
           <h2>{product.name}</h2>
           <p className="text-muted">{product.category}</p>
-          <h4>${product.price}</h4>
+          <h4>₹{product.price}</h4>
           <p>{product.description}</p>
 
           <div className="quantity-box">
@@ -67,14 +71,14 @@ function ProductDetails() {
   <button
     className="btn btn-dark"
     onClick={handleAddToCart}
-  >
+    >
     Add to Cart
   </button>
 
   <button
     className="btn btn-outline-danger"
     onClick={handleWishlist}
-  >
+    >
     Add to Wishlist
   </button>
 </div>
@@ -82,6 +86,7 @@ function ProductDetails() {
 
         </div>
       </div>
+    </div>
     </div>
   )
 }

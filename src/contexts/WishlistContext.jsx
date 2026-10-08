@@ -1,49 +1,158 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth } from './AuthContext'
+import api from '../services/api'
 
 const WishlistContext = createContext()
 
 export const WishlistProvider = ({ children }) => {
+
   const { user } = useAuth()
+
   const [wishlist, setWishlist] = useState([])
 
-  
-  useEffect(() => {
-    if (user) {
-      const stored = localStorage.getItem(`wishlist_${user.id}`)
-      setWishlist(stored ? JSON.parse(stored) : [])
-    } else {
+
+  // =========================
+  // GET WISHLIST
+  // =========================
+
+  const fetchWishlist = async () => {
+
+    try {
+
+      const response = await api.get('/wishlist/')
+
+      const wishlistData = response.data.map(item => ({
+        ...item.product,
+        wishlistItemId: item.id
+      }))
+
+      setWishlist(wishlistData)
+
+    } catch (error) {
+
+      console.error(
+        'Wishlist error:',
+        error.response?.data || error.message
+      )
+
+      // Keep wishlist empty if backend request fails
       setWishlist([])
+
     }
+
+  }
+
+
+  // =========================
+  // LOGIN / LOGOUT
+  // =========================
+
+  useEffect(() => {
+
+    if (!user) {
+
+      setWishlist([])
+
+      return
+
+    }
+
+    fetchWishlist()
+
   }, [user])
 
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem(
-        `wishlist_${user.id}`,
-        JSON.stringify(wishlist)
+
+  // =========================
+  // ADD TO WISHLIST
+  // =========================
+
+  const addToWishlist = async (product) => {
+
+    try {
+
+      await api.post('/wishlist/add/', {
+        product: product.id
+      })
+
+      await fetchWishlist()
+
+    } catch (error) {
+
+      console.error(
+        'Add wishlist error:',
+        error.response?.data || error.message
       )
-    }
-  }, [wishlist, user])
 
-  const addToWishlist = (product) => {
-    const exists = wishlist.find(item => item.id === product.id)
-    if (!exists) {
-      setWishlist([...wishlist, product])
     }
+
   }
 
-  const removeFromWishlist = (id) => {
-    setWishlist(wishlist.filter(item => item.id !== id))
+
+  // =========================
+  // REMOVE FROM WISHLIST
+  // =========================
+
+  const removeFromWishlist = async (id) => {
+
+    try {
+
+      await api.delete(`/wishlist/${id}/`)
+
+      await fetchWishlist()
+
+    } catch (error) {
+
+      console.error(
+        'Remove wishlist error:',
+        error.response?.data || error.message
+      )
+
+    }
+
   }
+
+
+  // =========================
+  // CHECK WISHLIST
+  // =========================
 
   const isInWishlist = (id) => {
+
     return wishlist.some(item => item.id === id)
+
   }
 
-  const clearWishlist = () => setWishlist([])
+
+  // =========================
+  // CLEAR WISHLIST
+  // =========================
+
+  const clearWishlist = async () => {
+
+    try {
+
+      for (const item of wishlist) {
+
+        await api.delete(`/wishlist/${item.id}/`)
+
+      }
+
+      setWishlist([])
+
+    } catch (error) {
+
+      console.error(
+        'Clear wishlist error:',
+        error.response?.data || error.message
+      )
+
+    }
+
+  }
+
 
   return (
+
     <WishlistContext.Provider
       value={{
         wishlist,
@@ -53,9 +162,14 @@ export const WishlistProvider = ({ children }) => {
         clearWishlist
       }}
     >
+
       {children}
+
     </WishlistContext.Provider>
+
   )
+
 }
+
 
 export const useWishlist = () => useContext(WishlistContext)

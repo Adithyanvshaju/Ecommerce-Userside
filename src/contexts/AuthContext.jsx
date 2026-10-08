@@ -3,32 +3,83 @@ import { createContext, useContext, useEffect, useState } from 'react'
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
+
   const [user, setUser] = useState(null)
+
   const [loading, setLoading] = useState(true)
 
+
+  // =========================
+  // CHECK USER WHEN APP LOADS
+  // =========================
+
   useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+
+    const accessToken = sessionStorage.getItem('access')
+    const refreshToken = sessionStorage.getItem('refresh')
+
+    if (accessToken && refreshToken) {
+      setUser(true)
     }
+
     setLoading(false)
+
   }, [])
 
-  const login = (userData) => {
-    localStorage.setItem('user', JSON.stringify(userData))
-    setUser(userData)
+
+  // =========================
+  // LOGIN
+  // =========================
+
+  const login = (tokens) => {
+
+    sessionStorage.setItem(
+      'access',
+      tokens.access
+    )
+
+    sessionStorage.setItem(
+      'refresh',
+      tokens.refresh
+    )
+
+    setUser(true)
+
   }
+
+
+  // =========================
+  // LOGOUT
+  // =========================
 
   const logout = () => {
-    localStorage.removeItem('user')
+
+    sessionStorage.removeItem('access')
+    sessionStorage.removeItem('refresh')
+
     setUser(null)
+
   }
 
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout
+      }}
+    >
+
       {!loading && children}
+
     </AuthContext.Provider>
+
   )
+
 }
 
-export const useAuth = () => useContext(AuthContext)
+
+export const useAuth = () =>
+  useContext(AuthContext)

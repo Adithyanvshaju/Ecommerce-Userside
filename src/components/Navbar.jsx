@@ -1,199 +1,288 @@
-import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import './Navbar.css'
-import { useCart } from '../contexts/CartContent'
-import { useWishlist } from '../contexts/WishlistContext'
-import { useAuth } from '../contexts/AuthContext'
-import { FaHeart, FaShoppingCart } from 'react-icons/fa'
-import api from '../services/api'
+
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FaHeart, FaShoppingCart, FaSearch } from "react-icons/fa";
+
+import api from "../services/api";
+
+import { useAuth } from "../contexts/AuthContext";
+import { useCart } from "../contexts/CartContent";
+import { useWishlist } from "../contexts/WishlistContext";
+
+import "./Navbar.css";
 
 function Navbar() {
-  const [query, setQuery] = useState('')
-  const [products, setProducts] = useState([])
-  const [filtered, setFiltered] = useState([])
-  const navigate = useNavigate()
+  const [search, setSearch] = useState("");
+  const [products, setProducts] = useState([]);
 
-  const { user, logout } = useAuth()
-  const { cart } = useCart()
-  const { wishlist } = useWishlist()
+  const navigate = useNavigate();
 
-  const cartCount = cart.length
-  const wishlistCount = wishlist.length
+  const { user, logout } = useAuth();
 
-  useEffect(() => {
-    api.get('/products').then(res => {
-      setProducts(res.data)
-    })
-  }, [])
+  const { cart } = useCart();
+  const { wishlist } = useWishlist();
+
+  // =========================
+  // SEARCH PRODUCTS FROM BACKEND
+  // =========================
 
   useEffect(() => {
-    if (!query.trim()) {
-      setFiltered([])
-      return
-    }
 
-    const matches = products.filter(p =>
-      p.name.toLowerCase().includes(query.toLowerCase())
-    )
+    const getProducts = async () => {
 
-    setFiltered(matches)
-  }, [query, products])
+      if (!search.trim()) {
+        setProducts([]);
+        return;
+      }
+
+      try {
+
+        const response = await api.get("/products/", {
+          params: {
+            search: search
+          }
+        });
+
+        setProducts(response.data.results);
+
+      } catch (error) {
+
+        console.error(
+          "Navbar product error:",
+          error.response?.data || error.message
+        );
+
+      }
+    };
+
+    getProducts();
+
+  }, [search]);
+
+  // =========================
+  // SEARCH
+  // =========================
 
   const handleSearch = (e) => {
-    e.preventDefault()
-    if (!query.trim()) return
-    navigate(`/products?search=${encodeURIComponent(query)}`)
-    setQuery('')
-    setFiltered([])
-  }
+    e.preventDefault();
+
+    if (!search.trim()) {
+      return;
+    }
+
+    navigate(`/products?search=${search}`);
+  };
+
+  // =========================
+  // PRODUCT CLICK
+  // =========================
+
+  const handleProductClick = (id) => {
+    navigate(`/product/${id}`);
+
+    setSearch("");
+  };
+
+  // =========================
+  // LOGOUT
+  // =========================
+
+  const handleLogout = () => {
+    logout();
+
+    navigate("/");
+  };
 
   return (
     <nav className="navbar navbar-expand-lg custom-navbar">
-      <div className="container position-relative">
+
+      <div className="container navbar-container">
 
         {/* LOGO */}
-        <Link className="navbar-brand d-flex align-items-center gap-2" to="/">
+
+        <Link to="/" className="navbar-brand">
+
           <svg width="40" height="40" viewBox="0 0 100 100">
-            <path d="M20 80 V20 L50 60 V20 H60 V80 H50 L20 40 V80 Z" fill="white" />
-            <path d="M65 20 H85 C92 20 92 35 85 40 C92 45 92 60 85 60 H65 V20 Z" fill="white" />
+
+            <path
+              d="M20 80 V20 L50 60 V20 H60 V80 H50 L20 40 V80 Z"
+              fill="white"
+            />
+
+            <path
+              d="M65 20 H85 C92 20 92 35 85 40 C92 45 92 60 85 60 H65 V20 Z"
+              fill="white"
+            />
+
           </svg>
-          <span className="brand-text">NEW BALANCE</span>
+
+          <span className="brand-text">
+            NEW BALANCE
+          </span>
+
         </Link>
 
-        {/* HAMBURGER */}
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarContent"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
+        {/* SEARCH */}
 
-        {/* DESKTOP SEARCH */}
-        <div className="position-relative navbar-search d-none d-lg-flex">
-          <form onSubmit={handleSearch} className="d-flex w-100">
+        <div className="search-container">
+
+          <form
+            className="navbar-search"
+            onSubmit={handleSearch}
+          >
+
             <input
-              type="search"
-              placeholder="Search shoes..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              autoComplete="off"
+              type="text"
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
             />
-            <button type="submit">Search</button>
+
+            <button type="submit">
+              <FaSearch />
+            </button>
+
           </form>
 
-          {filtered.length > 0 && (
-            <div className="position-absolute bg-white shadow w-100" style={{ top: '100%', zIndex: 999 }}>
-              {filtered.map(product => (
-                <div
-                  key={product.id}
-                  className="px-3 py-2 border-bottom search-item"
-                  onClick={() => {
-                    navigate(`/product/${product.id}`)
-                    setQuery('')
-                    setFiltered([])
-                  }}
-                >
-                  {product.name}
+          {search.trim() !== "" && (
+
+            <div className="search-results">
+
+              {products.length > 0 ? (
+
+                products.slice(0, 5).map((product) => (
+
+                  <div
+                    key={product.id}
+                    className="search-result-item"
+                    onClick={() =>
+                      handleProductClick(product.id)
+                    }
+                  >
+
+                    <span>
+                      {product.name}
+                    </span>
+
+                    <span>
+                      ₹{product.price}
+                    </span>
+
+                  </div>
+
+                ))
+
+              ) : (
+
+                <div className="no-search-results">
+                  No products found
                 </div>
-              ))}
+
+              )}
+
             </div>
+
           )}
+
         </div>
 
-        {/* NAV LINKS */}
-        <div className="collapse navbar-collapse justify-content-end" id="navbarContent">
-          <ul className="navbar-nav gap-lg-3 align-items-lg-center">
+        {/* RIGHT SIDE */}
 
-            {/* MOBILE SEARCH */}
-            <li className="nav-item d-lg-none w-100 mb-3">
-              <div className="navbar-search">
-                <form onSubmit={handleSearch} className="d-flex w-100">
-                  <input
-                    type="search"
-                    placeholder="Search shoes..."
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    autoComplete="off"
-                  />
-                  <button type="submit">Search</button>
-                </form>
+        <div className="navbar-actions">
 
-                {filtered.length > 0 && (
-                  <div className="bg-white shadow mt-1">
-                    {filtered.map(product => (
-                      <div
-                        key={product.id}
-                        className="px-3 py-2 border-bottom search-item"
-                        onClick={() => {
-                          navigate(`/product/${product.id}`)
-                          setQuery('')
-                          setFiltered([])
-                        }}
-                      >
-                        {product.name}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </li>
+          {/* ORDERS */}
 
-            <li className="nav-item">
-              <Link className="nav-link text-white" to="/products">SNKRS</Link>
-            </li>
+          {user && (
 
-            {user ? (
-              <>
-                <li className="nav-item position-relative">
-                  <Link className="nav-link text-white" to="/cart">
-                    <FaShoppingCart size={20} />
-                    {cartCount > 0 && (
-                      <span className="badge bg-danger position-absolute top-0 start-100 translate-middle">
-                        {cartCount}
-                      </span>
-                    )}
-                  </Link>
-                </li>
+            <Link
+              to="/orders"
+              className="nav-orders-button"
+            >
+              Orders
+            </Link>
 
-                <li className="nav-item position-relative">
-                  <Link className="nav-link text-white" to="/wishlist">
-                    <FaHeart size={20} />
-                    {wishlistCount > 0 && (
-                      <span className="badge bg-danger position-absolute top-0 start-100 translate-middle">
-                        {wishlistCount}
-                      </span>
-                    )}
-                  </Link>
-                </li>
+          )}
 
-                <li className="nav-item">
-                  <Link className="nav-link text-white" to="/orders">ORDERS</Link>
-                </li>
+          {/* WISHLIST */}
 
-                <li className="nav-item">
-                  <button className="btn btn-outline-light" onClick={logout}>
-                    Logout
-                  </button>
-                </li>
-              </>
-            ) : (
-              <>
-                <li className="nav-item">
-                  <Link className="btn btn-outline-light" to="/login">Login</Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="btn btn-outline-light" to="/register">Register</Link>
-                </li>
-              </>
+          <Link
+            to="/wishlist"
+            className="nav-icon-link position-relative"
+          >
+
+            <FaHeart />
+
+            {user && wishlist.length > 0 && (
+
+              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {wishlist.length}
+              </span>
+
             )}
 
-          </ul>
+          </Link>
+
+          {/* CART */}
+
+          <Link
+            to="/cart"
+            className="nav-icon-link position-relative"
+          >
+
+            <FaShoppingCart />
+
+            {user && cart.length > 0 && (
+
+              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {cart.length}
+              </span>
+
+            )}
+
+          </Link>
+
+          {/* AUTH */}
+
+          {user ? (
+
+            <button
+              className="nav-logout-button"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+
+          ) : (
+
+            <>
+
+              <Link
+                to="/login"
+                className="nav-login-button"
+              >
+                Login
+              </Link>
+
+              <Link
+                to="/register"
+                className="nav-register-button"
+              >
+                Register
+              </Link>
+
+            </>
+
+          )}
+
         </div>
+
       </div>
+
     </nav>
-  )
+  );
 }
 
-export default Navbar
+export default Navbar;
+
