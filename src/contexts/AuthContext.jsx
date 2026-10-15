@@ -1,85 +1,79 @@
-import { createContext, useContext, useEffect, useState } from 'react'
 
-const AuthContext = createContext()
+import { createContext, useContext, useEffect, useState } from "react";
+
+const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-
-  const [user, setUser] = useState(null)
-
-  const [loading, setLoading] = useState(true)
-
-
-  // =========================
-  // CHECK USER WHEN APP LOADS
-  // =========================
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    try {
+      const accessToken = localStorage.getItem("access");
+      const savedUser = localStorage.getItem("user");
 
-    const accessToken = sessionStorage.getItem('access')
-    const refreshToken = sessionStorage.getItem('refresh')
+      if (accessToken && savedUser) {
+        setUser(JSON.parse(savedUser));
+      } else if (accessToken) {
+        setUser({ authenticated: true });
+      }
+    } catch (error) {
+      console.error("Failed to restore login session:", error);
+      localStorage.removeItem("user");
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    if (accessToken && refreshToken) {
-      setUser(true)
+  const login = (data) => {
+    if (data.access) {
+      localStorage.setItem("access", data.access);
     }
 
-    setLoading(false)
+    if (data.refresh) {
+      localStorage.setItem("refresh", data.refresh);
+    }
 
-  }, [])
+    const isStaff = Boolean(
+      data.is_staff || data.is_superuser
+    );
 
+    const userData = {
+      username: data.username || "User",
+      email: data.email || "",
+      is_staff: isStaff,
+      is_superuser: Boolean(data.is_superuser),
+      authenticated: true,
+    };
 
-  // =========================
-  // LOGIN
-  // =========================
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("is_staff", String(isStaff));
 
-  const login = (tokens) => {
-
-    sessionStorage.setItem(
-      'access',
-      tokens.access
-    )
-
-    sessionStorage.setItem(
-      'refresh',
-      tokens.refresh
-    )
-
-    setUser(true)
-
-  }
-
-
-  // =========================
-  // LOGOUT
-  // =========================
+    setUser(userData);
+  };
 
   const logout = () => {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("user");
+    localStorage.removeItem("is_staff");
 
-    sessionStorage.removeItem('access')
-    sessionStorage.removeItem('refresh')
-
-    setUser(null)
-
-  }
-
+    setUser(null);
+  };
 
   return (
-
     <AuthContext.Provider
       value={{
         user,
+        loading,
         login,
-        logout
+        logout,
       }}
     >
-
       {!loading && children}
-
     </AuthContext.Provider>
+  );
+};
 
-  )
-
-}
-
-
-export const useAuth = () =>
-  useContext(AuthContext)
+export const useAuth = () => useContext(AuthContext);

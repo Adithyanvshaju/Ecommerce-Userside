@@ -9,22 +9,18 @@ import { CartProvider } from './contexts/CartContent.jsx'
 import { WishlistProvider } from './contexts/WishlistContext.jsx';
 import { OrdersProvider } from './contexts/OrdersContext.jsx';
 
-
 createRoot(document.getElementById('root')).render(
-  
-
-  <BrowserRouter>
-    <AuthProvider>
-  <CartProvider>
-    <WishlistProvider>
-      <OrdersProvider>
-
-    <App />
-
-      </OrdersProvider>
-    </WishlistProvider>
-  </CartProvider>
-    </AuthProvider>
-  </BrowserRouter>
-
+  <StrictMode>
+    <BrowserRouter>
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <OrdersProvider>
+              <App />
+            </OrdersProvider>
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  </StrictMode>
 )

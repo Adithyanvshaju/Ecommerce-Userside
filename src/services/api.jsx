@@ -1,112 +1,131 @@
-import axios from 'axios'
+
+import axios from "axios";
+
+const API_BASE_URL = "http://127.0.0.1:8000/api/";
 
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/'
-})
+  baseURL: API_BASE_URL,
+});
 
-
-// =====================================
-// ADD ACCESS TOKEN TO EVERY REQUEST
-// =====================================
-
+// Attach the access token to authenticated requests.
 api.interceptors.request.use(
   (config) => {
-
-    const accessToken = sessionStorage.getItem('access')
+    const accessToken = localStorage.getItem("access");
 
     if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
-    return config
+    return config;
   },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
+  (error) => Promise.reject(error)
+);
 
-
-// =====================================
-// AUTOMATICALLY REFRESH ACCESS TOKEN
-// =====================================
-
+// Refresh expired access tokens.
 api.interceptors.response.use(
-  (response) => {
-
-    // Normal successful response
-    return response
-  },
-
+  (response) => response,
   async (error) => {
+    const originalRequest = error.config;
 
-    const originalRequest = error.config
-
-    // If access token expired
     if (
       error.response?.status === 401 &&
+      originalRequest &&
       !originalRequest._retry &&
-      !originalRequest.url.includes('/login/') &&
-      !originalRequest.url.includes('/token/refresh/')
+      !originalRequest.url?.includes("/login/") &&
+      !originalRequest.url?.includes("/token/refresh/") &&
+      !originalRequest.url?.includes("/admin/login/")
     ) {
+      originalRequest._retry = true;
 
-      originalRequest._retry = true
+      const refreshToken = localStorage.getItem("refresh");
 
-      const refreshToken = sessionStorage.getItem('refresh')
-
-      // No refresh token available
       if (!refreshToken) {
-
-        sessionStorage.clear()
-        window.location.href = '/login'
-
-        return Promise.reject(error)
+        localStorage.clear();
+        window.location.href = "/login";
+        return Promise.reject(error);
       }
 
       try {
-
-        // Ask Django for a new access token
         const response = await axios.post(
-          'http://127.0.0.1:8000/api/token/refresh/',
-          {
-            refresh: refreshToken
-          }
-        )
+          `${API_BASE_URL}token/refresh/`,
+          { refresh: refreshToken }
+        );
 
-        const newAccessToken = response.data.access
+        const newAccessToken = response.data.access;
 
-        // Save the new access token
-        sessionStorage.setItem(
-          'access',
-          newAccessToken
-        )
+        localStorage.setItem("access", newAccessToken);
 
-        // Add new token to the failed request
+        originalRequest.headers = originalRequest.headers || {};
         originalRequest.headers.Authorization =
-          `Bearer ${newAccessToken}`
+          `Bearer ${newAccessToken}`;
 
-        // Try the original request again
-        return api(originalRequest)
-
+        return api(originalRequest);
       } catch (refreshError) {
+        localStorage.clear();
+        window.location.href = "/login";
 
-        // Refresh token is also invalid/expired
-        console.error(
-          'Token refresh failed:',
-          refreshError.response?.data ||
-          refreshError.message
-        )
-
-        sessionStorage.clear()
-
-        window.location.href = '/login'
-
-        return Promise.reject(refreshError)
+        return Promise.reject(refreshError);
       }
     }
 
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
+// Authentication endpoints.
+export const loginUser = (credentials) =>
+  api.post("login/", credentials);
 
-export default api
+export const registerUser = (userData) =>
+  api.post("register/", userData);
+
+export const verifyOTP = (data) =>
+  api.post("verify-otp/", data);
+
+export const adminLogin = (credentials) =>
+  api.post("admin/login/", credentials);
+
+// Admin dashboard - requires a matching backend endpoint.
+export const getAdminStats = () =>
+  api.get("admin/stats/");
+
+// Product management.
+export const getAdminProducts = (page = 1) =>
+  api.get(`admin/products/?page=${page}`);
+
+export const getProductById = (id) =>
+  api.get(`products/${id}/`);
+
+export const addProduct = (productData) =>
+  api.post("admin/products/add/", productData);
+
+export const updateProduct = (id, productData) =>
+  api.put(`admin/products/${id}/`, productData);
+
+export const deleteProduct = (id) =>
+  api.delete(`products/${id}/`);
+
+export const toggleProductStatus = (id) =>
+  api.patch(`products/${id}/toggle-status/`);
+
+// Admin user management.
+export const getAdminUsers = () =>
+  api.get("admin/users/");
+
+export const getAdminUserDetails = (id) =>
+  api.get(`admin/users/${id}/`);
+
+export const toggleUserBlockStatus = (id) =>
+  api.patch(`admin/users/${id}/toggle-block/`);
+
+export const deleteUser = (id) =>
+  api.delete(`admin/users/${id}/`);
+
+// Admin order management.
+export const getAdminOrders = (page = 1) =>
+  api.get(`admin/orders/?page=${page}`);
+
+export const updateOrderStatus = (orderId, status) =>
+  api.patch(`admin/orders/${orderId}/update-status/`, { status });
+
+export default api;

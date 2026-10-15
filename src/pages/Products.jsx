@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react'
 import { useLocation, Link, useNavigate } from 'react-router-dom'
 import api from '../services/api'
@@ -322,4 +321,3 @@ function Products() {
 }
 
 export default Products
-
